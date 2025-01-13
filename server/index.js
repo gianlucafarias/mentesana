@@ -8,6 +8,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import blogRoutes from "./src/routes/blog.routes.js";
 import eventRoutes from "./src/routes/event.routes.js";
 import dailyEntryRoutes from "./src/routes/dailyEntry.routes.js";
+import notificationRoutes from "./src/routes/notification.routes.js";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/daily-entries", dailyEntryRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Manejo de errores global
 app.use((err, req, res, next) => {
