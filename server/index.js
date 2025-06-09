@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
+import { errorHandler } from "./src/middlewares/errorHandler.js";
 
 // Importar rutas
 import authRoutes from "./src/routes/auth.routes.js";
@@ -25,11 +26,15 @@ app.use("/api/events", eventRoutes);
 app.use("/api/daily-entries", dailyEntryRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Manejo de errores global
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "¡Algo salió mal!" });
+// Manejo de rutas no encontradas
+app.all('*', (req, res, next) => {
+  const err = new Error(`No se puede encontrar ${req.originalUrl} en el servidor`);
+  err.statusCode = 404;
+  next(err);
 });
+
+// Manejo de errores global
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
