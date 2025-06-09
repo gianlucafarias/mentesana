@@ -48,6 +48,7 @@ model DailyEntry {
   id        String    @id @default(uuid())
   mood      Int       
   notes     String?
+  aiMessage String?   // Mensaje motivacional generado por IA
   date      DateTime  @default(now())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
