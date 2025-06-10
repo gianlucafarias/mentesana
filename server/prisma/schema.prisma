@@ -8,11 +8,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum RoleType {
+  USER
+  EDITOR
+  ADMIN
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
   password      String
   name          String
+  birthDate     DateTime?  // Fecha de nacimiento
+  locality      String?    // Localidad
+  province      String?    // Provincia
+  role          RoleType   @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   posts         Post[]
