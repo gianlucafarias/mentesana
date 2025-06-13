@@ -44,17 +44,20 @@ export const getDailyEntries = async (req, res) => {
     const userId = req.user.id;
     const { startDate, endDate } = req.query;
 
-    const whereClause = {
-      userId,
-      ...(startDate && endDate
-        ? {
-            date: {
-              gte: new Date(startDate),
-              lte: new Date(endDate)
-            }
-          }
-        : {})
-    };
+    let whereClause = { userId };
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setUTCHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setUTCHours(23, 59, 59, 999);
+
+      whereClause.date = {
+        gte: start,
+        lte: end,
+      };
+    }
 
     const entries = await prisma.dailyEntry.findMany({
       where: whereClause,
