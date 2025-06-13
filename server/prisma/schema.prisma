@@ -8,11 +8,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum RoleType {
+  USER
+  EDITOR
+  ADMIN
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
   password      String
   name          String
+  birthDate     DateTime?  // Fecha de nacimiento
+  locality      String?    // Localidad
+  province      String?    // Provincia
+  role          RoleType   @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   posts         Post[]
@@ -48,6 +58,7 @@ model DailyEntry {
   id        String    @id @default(uuid())
   mood      Int       
   notes     String?
+  aiMessage String?   // Mensaje motivacional generado por IA
   date      DateTime  @default(now())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
