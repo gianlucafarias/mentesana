@@ -20,6 +20,28 @@ export const createDailyEntry = async (req, res) => {
 
     console.log('Usuario encontrado:', userExists.id);
 
+    // Verificar si ya existe una entrada para hoy
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const existingEntry = await prisma.dailyEntry.findFirst({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lt: endOfDay
+        }
+      }
+    });
+
+    if (existingEntry) {
+      return res.status(409).json({ 
+        message: 'Ya has registrado una entrada para hoy. Podrás crear una nueva entrada mañana.',
+        existingEntry: existingEntry
+      });
+    }
+
     // Generar mensaje motivacional con IA
     const aiMessage = await generateMotivationalMessage(mood, notes);
 
@@ -156,5 +178,35 @@ export const deleteDailyEntry = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al eliminar la entrada diaria' });
+  }
+};
+
+export const canCreateEntryToday = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Verificar si ya existe una entrada para hoy
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const existingEntry = await prisma.dailyEntry.findFirst({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lt: endOfDay
+        }
+      }
+    });
+
+    res.json({
+      canCreate: !existingEntry,
+      hasEntryToday: !!existingEntry,
+      existingEntry: existingEntry || null
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al verificar las entradas diarias' });
   }
 }; 

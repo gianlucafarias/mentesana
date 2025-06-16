@@ -1,208 +1,96 @@
-# Mente Sana - API Documentation
+# MenteSana Server
 
-API REST para la aplicación Mente Sana, una plataforma para el bienestar mental.
+Servidor backend para la aplicación MenteSana.
 
-## Configuración
+## 🚀 Configuración inicial
 
-1. Clonar el repositorio
-2. Instalar dependencias:
+### 1. Clonar el repositorio
+```bash
+git clone <url-del-repo>
+cd server
+```
+
+### 2. Instalar dependencias
 ```bash
 npm install
 ```
 
-3. Configurar variables de entorno en `.env`:
-```
-DATABASE_URL="postgresql://usuario:contraseña@localhost:5432/mentesana?schema=public"
-JWT_SECRET="tu_secreto_jwt_aqui"
+### 3. Configurar variables de entorno
+Crear archivo `.env` en la raíz del proyecto:
+```env
+DATABASE_URL="postgresql://usuario:password@localhost:5432/mentesana"
+JWT_SECRET="tu_jwt_secret_aqui"
+OPENAI_API_KEY="tu_openai_api_key_aqui"
 ```
 
-4. Ejecutar migraciones de Prisma:
+### 4. Configurar base de datos
 ```bash
-npx prisma generate
-npx prisma db push
+# Opción 1: Setup completo (recomendado para primera vez)
+npm run db:setup
+
+# Opción 2: Paso a paso
+npm run db:migrate  # Aplica migraciones
+npm run db:generate # Genera cliente Prisma
 ```
 
-5. Iniciar el servidor:
+## 🔄 Flujo de trabajo diario
+
+### Después de hacer `git pull`:
 ```bash
-npm start
+# Solo si hay nuevas migraciones
+npm run db:setup
 ```
 
-## Endpoints
+### Comandos útiles:
+```bash
+npm run dev          # Iniciar servidor en modo desarrollo
+npm run db:studio    # Abrir Prisma Studio (interfaz visual de DB)
+npm run db:reset     # Resetear DB (¡CUIDADO! Borra todos los datos)
+```
+
+## 📚 API Endpoints
 
 ### Autenticación
-
-#### Registro de Usuario
-- **POST** `/api/auth/register`
-- **Body:**
-```json
-{
-  "email": "usuario@ejemplo.com",
-  "password": "contraseña123",
-  "name": "Nombre Usuario"
-}
-```
-
-#### Inicio de Sesión
-- **POST** `/api/auth/login`
-- **Body:**
-```json
-{
-  "email": "usuario@ejemplo.com",
-  "password": "contraseña123"
-}
-```
-
-#### Obtener Perfil
-- **GET** `/api/auth/profile`
-- **Headers:** Authorization: Bearer {token}
+- `POST /api/auth/register` - Registrar usuario
+- `POST /api/auth/login` - Iniciar sesión
+- `GET /api/auth/profile` - Obtener perfil (requiere token)
 
 ### Blog
-
-#### Crear Post
-- **POST** `/api/blog`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "title": "Título del Post",
-  "content": "Contenido del post",
-  "published": true
-}
-```
-
-#### Obtener Posts
-- **GET** `/api/blog`
-- **Público**
-
-#### Obtener Post por ID
-- **GET** `/api/blog/:id`
-- **Público**
-
-#### Actualizar Post
-- **PUT** `/api/blog/:id`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "title": "Nuevo Título",
-  "content": "Nuevo contenido",
-  "published": true
-}
-```
-
-#### Eliminar Post
-- **DELETE** `/api/blog/:id`
-- **Headers:** Authorization: Bearer {token}
+- `GET /api/blog` - Obtener todos los posts
+- `POST /api/blog` - Crear post (requiere auth)
+- `PUT /api/blog/:id` - Actualizar post (requiere auth)
+- `DELETE /api/blog/:id` - Eliminar post (requiere auth)
 
 ### Eventos
+- `GET /api/events` - Obtener todos los eventos
+- `GET /api/events/upcoming` - Eventos próximos
+- `GET /api/events/past` - Eventos pasados
+- `POST /api/events` - Crear evento (requiere auth)
+- `PUT /api/events/:id` - Actualizar evento (requiere auth)
+- `DELETE /api/events/:id` - Eliminar evento (requiere auth)
 
-#### Crear Evento
-- **POST** `/api/events`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "title": "Título del Evento",
-  "description": "Descripción del evento",
-  "date": "2024-01-20T18:00:00Z",
-  "location": "Ubicación del evento"
-}
-```
-
-#### Obtener Eventos
-- **GET** `/api/events`
-- **Público**
-
-#### Obtener Evento por ID
-- **GET** `/api/events/:id`
-- **Público**
-
-#### Actualizar Evento
-- **PUT** `/api/events/:id`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "title": "Nuevo Título",
-  "description": "Nueva descripción",
-  "date": "2024-01-20T19:00:00Z",
-  "location": "Nueva ubicación"
-}
-```
-
-#### Eliminar Evento
-- **DELETE** `/api/events/:id`
-- **Headers:** Authorization: Bearer {token}
-
-### Registro Diario
-
-#### Crear Entrada Diaria
-- **POST** `/api/daily-entries`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "mood": 5,
-  "notes": "Me siento muy bien hoy"
-}
-```
-
-#### Obtener Entradas Diarias
-- **GET** `/api/daily-entries`
-- **Headers:** Authorization: Bearer {token}
-- **Query Params:** 
-  - startDate (opcional)
-  - endDate (opcional)
-
-#### Obtener Entrada por ID
-- **GET** `/api/daily-entries/:id`
-- **Headers:** Authorization: Bearer {token}
-
-#### Actualizar Entrada
-- **PUT** `/api/daily-entries/:id`
-- **Headers:** Authorization: Bearer {token}
-- **Body:**
-```json
-{
-  "mood": 4,
-  "notes": "Actualización de notas"
-}
-```
-
-#### Eliminar Entrada
-- **DELETE** `/api/daily-entries/:id`
-- **Headers:** Authorization: Bearer {token}
+### Entradas Diarias
+- `GET /api/daily-entries` - Obtener entradas (requiere auth)
+- `POST /api/daily-entries` - Crear entrada diaria (requiere auth, máximo 1 por día)
+- `GET /api/daily-entries/can-create-today` - Verificar si puede crear entrada hoy
+- `PUT /api/daily-entries/:id` - Actualizar entrada (requiere auth)
+- `DELETE /api/daily-entries/:id` - Eliminar entrada (requiere auth)
 
 ### Notificaciones
+- `GET /api/notifications` - Obtener notificaciones (requiere auth)
+- `PUT /api/notifications/:id/read` - Marcar como leída (requiere auth)
 
-#### Obtener Notificaciones
-- **GET** `/api/notifications`
-- **Headers:** Authorization: Bearer {token}
-- **Query Params:**
-  - page (default: 1)
-  - limit (default: 10)
+## ⚠️ Importante para el equipo
 
-#### Obtener Contador de No Leídas
-- **GET** `/api/notifications/unread-count`
-- **Headers:** Authorization: Bearer {token}
+1. **Nunca hagas `prisma migrate reset` en producción**
+2. **Siempre ejecuta `npm run db:setup` después de hacer pull con nuevas migraciones**
+3. **No subas tu archivo `.env` al repositorio**
+4. **Si tienes problemas con la DB, consulta con el equipo antes de resetear**
 
-#### Marcar Como Leída
-- **PUT** `/api/notifications/:id/read`
-- **Headers:** Authorization: Bearer {token}
+## 🛠️ Tecnologías
 
-#### Marcar Todas Como Leídas
-- **PUT** `/api/notifications/mark-all-read`
-- **Headers:** Authorization: Bearer {token}
-
-#### Eliminar Notificación
-- **DELETE** `/api/notifications/:id`
-- **Headers:** Authorization: Bearer {token}
-
-## Notas Adicionales
-
-- Todas las rutas protegidas requieren el header de autorización con el token JWT
-- Las fechas deben enviarse en formato ISO 8601
-- El campo `mood` en las entradas diarias debe ser un número entre 1 y 5
-- Las notificaciones se generan automáticamente para:
-  - Nuevos eventos creados
-  - Nuevos posts publicados 
+- Node.js + Express
+- Prisma ORM
+- PostgreSQL
+- JWT para autenticación
+- OpenAI API para mensajes motivacionales 

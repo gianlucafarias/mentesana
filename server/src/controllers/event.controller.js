@@ -3,7 +3,7 @@ import { notifyNewEvent } from '../services/notification.service.js';
 
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, image } = req.body;
     const authorId = req.user.id;
 
     const event = await prisma.event.create({
@@ -12,6 +12,7 @@ export const createEvent = async (req, res) => {
         description,
         date: new Date(date),
         location,
+        image,
         authorId
       }
     });
@@ -81,7 +82,7 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, image } = req.body;
     const userId = req.user.id;
 
     // Verificar que el evento existe y pertenece al usuario
@@ -103,7 +104,8 @@ export const updateEvent = async (req, res) => {
         title,
         description,
         date: new Date(date),
-        location
+        location,
+        image
       }
     });
 
@@ -140,5 +142,67 @@ export const deleteEvent = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al eliminar el evento' });
+  }
+};
+
+export const getUpcomingEvents = async (req, res) => {
+  try {
+    const currentDate = new Date();
+
+    const events = await prisma.event.findMany({
+      where: {
+        date: {
+          gte: currentDate
+        }
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    });
+
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener los eventos próximos' });
+  }
+};
+
+export const getPastEvents = async (req, res) => {
+  try {
+    const currentDate = new Date();
+
+    const events = await prisma.event.findMany({
+      where: {
+        date: {
+          lt: currentDate
+        }
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        date: 'desc' // Ordenamos los eventos pasados del más reciente al más antiguo
+      }
+    });
+
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener los eventos pasados' });
   }
 }; 

@@ -1,12 +1,14 @@
 import express from 'express';
-import { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent } from '../controllers/event.controller.js';
+import { createEvent, getAllEvents, getEventById, getUpcomingEvents, getPastEvents, updateEvent, deleteEvent } from '../controllers/event.controller.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 // Rutas públicas
 router.get('/', getAllEvents);
-router.get('/:id', getEventById);
+router.get('/event/:id', getEventById);
+router.get('/upcoming', getUpcomingEvents);
+router.get('/past', getPastEvents);
 
 // Rutas protegidas
 router.post('/', authenticateToken, createEvent);
