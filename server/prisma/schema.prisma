@@ -36,6 +36,7 @@ model Post {
   title     String
   content   String
   image     String?   // URL o ruta 
+  category  String?   // Categoría del post
   published Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
