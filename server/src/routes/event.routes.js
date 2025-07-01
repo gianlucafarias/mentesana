@@ -1,6 +1,6 @@
 import express from 'express';
 import { createEvent, getAllEvents, getEventById, getUpcomingEvents, getPastEvents, updateEvent, deleteEvent } from '../controllers/event.controller.js';
-import { authenticateToken } from '../middlewares/auth.middleware.js';
+import { authenticateToken, requireAdmin } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -10,9 +10,9 @@ router.get('/event/:id', getEventById);
 router.get('/upcoming', getUpcomingEvents);
 router.get('/past', getPastEvents);
 
-// Rutas protegidas
-router.post('/', authenticateToken, createEvent);
-router.put('/:id', authenticateToken, updateEvent);
-router.delete('/:id', authenticateToken, deleteEvent);
+// Rutas protegidas - solo admin puede crear, editar y eliminar eventos
+router.post('/', authenticateToken, requireAdmin, createEvent);
+router.put('/:id', authenticateToken, requireAdmin, updateEvent);
+router.delete('/:id', authenticateToken, requireAdmin, deleteEvent);
 
 export default router; 

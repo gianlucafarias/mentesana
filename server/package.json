@@ -14,7 +14,13 @@
     "db:generate": "npx prisma generate",
     "db:setup": "npx prisma migrate deploy && npx prisma generate",
     "db:reset": "npx prisma migrate reset",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "deploy": "bash deploy.sh",
+    "update": "bash update.sh",
+    "quick-update": "bash quick-update.sh",
+    "setup-db": "bash setup-db.sh",
+    "backup-db": "bash backup-db.sh",
+    "restore-db": "bash restore-db.sh"
   },
   "keywords": [],
   "author": "",
