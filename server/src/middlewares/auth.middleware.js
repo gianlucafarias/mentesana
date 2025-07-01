@@ -15,4 +15,16 @@ export const authenticateToken = (req, res, next) => {
     req.user = user;
     next();
   });
+};
+
+export const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Usuario no autenticado' });
+  }
+
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Acceso denegado. Se requieren privilegios de administrador' });
+  }
+
+  next();
 }; 
