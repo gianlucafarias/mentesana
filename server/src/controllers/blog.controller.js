@@ -3,13 +3,14 @@ import { notifyNewPost } from '../services/notification.service.js';
 
 export const createPost = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, image } = req.body;
     const authorId = req.user.id;
 
     const post = await prisma.post.create({
       data: {
         title,
         content,
+        image,
         authorId
       }
     });
@@ -79,7 +80,7 @@ export const getPostById = async (req, res) => {
 export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, published } = req.body;
+    const { title, content, image, published } = req.body;
     const userId = req.user.id;
 
     // Verificar que el post existe y pertenece al usuario
@@ -100,6 +101,7 @@ export const updatePost = async (req, res) => {
       data: {
         title,
         content,
+        image,
         published
       }
     });

@@ -35,6 +35,8 @@ model Post {
   id        String    @id @default(uuid())
   title     String
   content   String
+  image     String?   // URL o ruta 
+  category  String?   // Categoría del post
   published Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -48,6 +50,7 @@ model Event {
   description String
   date        DateTime
   location    String?
+  image       String?   // URL o ruta
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   author      User      @relation(fields: [authorId], references: [id])

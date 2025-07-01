@@ -7,7 +7,18 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:migrate": "npx prisma migrate deploy",
+    "db:generate": "npx prisma generate",
+    "db:setup": "npx prisma migrate deploy && npx prisma generate",
+    "db:reset": "npx prisma migrate reset",
+    "db:studio": "npx prisma studio",
+    "deploy": "bash deploy.sh",
+    "update": "bash update.sh",
+    "quick-update": "bash quick-update.sh",
+    "setup-db": "bash setup-db.sh",
+    "backup-db": "bash backup-db.sh",
+    "restore-db": "bash restore-db.sh"
   },
   "keywords": [],
   "author": "",
