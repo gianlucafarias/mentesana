@@ -2,6 +2,19 @@
 
 echo "🚀 Iniciando deployment de MenteSana Server..."
 
+# Verificar si existe .env
+if [ ! -f ".env" ]; then
+    echo "⚠️  No se encontró archivo .env"
+    read -p "¿Deseas configurar la base de datos ahora? (y/N): " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        ./setup-db.sh
+    else
+        echo "❌ Configuración de base de datos requerida. Ejecuta ./setup-db.sh"
+        exit 1
+    fi
+fi
+
 # Instalar dependencias
 echo "📦 Instalando dependencias..."
 npm install --production
