@@ -4,7 +4,7 @@ import { deleteImageFile } from '../config/upload.config.js';
 
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location, image } = req.body;
+    const { title, description, date, location, image, eventType } = req.body;
     const authorId = req.user.id;
 
     const event = await prisma.event.create({
@@ -14,6 +14,7 @@ export const createEvent = async (req, res) => {
         date: new Date(date),
         location,
         image,
+        eventType: eventType || 'PRESENCIAL',
         authorId
       }
     });
@@ -83,7 +84,7 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, date, location, image } = req.body;
+    const { title, description, date, location, image, eventType } = req.body;
     const userId = req.user.id;
 
     // Verificar que el evento existe y pertenece al usuario
@@ -99,15 +100,23 @@ export const updateEvent = async (req, res) => {
       return res.status(403).json({ message: 'No tienes permiso para editar este evento' });
     }
 
+    // Preparar datos para actualizar
+    const updateData = {
+      title,
+      description,
+      date: new Date(date),
+      location,
+      image
+    };
+
+    // Solo actualizar eventType si se proporciona
+    if (eventType) {
+      updateData.eventType = eventType;
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id },
-      data: {
-        title,
-        description,
-        date: new Date(date),
-        location,
-        image
-      }
+      data: updateData
     });
 
     res.json(updatedEvent);

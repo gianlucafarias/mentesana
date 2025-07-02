@@ -14,6 +14,7 @@ import dailyEntryRoutes from "./src/routes/dailyEntry.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
 import statsRoutes from "./src/routes/stats.routes.js";
 import uploadRoutes from "./src/routes/upload.routes.js";
+import userRoutes from "./src/routes/user.routes.js";
 
 dotenv.config();
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/daily-entries", dailyEntryRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/users", userRoutes);
 
 // Manejo de rutas no encontradas
 app.all('*', (req, res, next) => {

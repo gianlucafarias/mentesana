@@ -74,6 +74,7 @@ export const login = async (req, res) => {
         locality: true,
         province: true,
         role: true,
+        isActive: true,
         createdAt: true
       }
     });
@@ -82,17 +83,30 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Usuario no encontrado' });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Cuenta desactivada. Contacta al administrador' });
+    }
+
     // Verificar contraseña
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(400).json({ message: 'Contraseña incorrecta' });
     }
 
+    // Actualizar lastLogin
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    });
+
     // Generar token con información del rol
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
 
-    // Remover password de la respuesta
-    const { password: _, ...userWithoutPassword } = user;
+    // Remover password de la respuesta e incluir lastLogin actualizado
+    const { password: _, ...userWithoutPassword } = {
+      ...user,
+      lastLogin: new Date()
+    };
 
     res.json({ token, user: userWithoutPassword });
   } catch (error) {
@@ -113,6 +127,7 @@ export const getProfile = async (req, res) => {
         locality: true,
         province: true,
         role: true,
+        lastLogin: true,
         createdAt: true,
         updatedAt: true
       }
@@ -147,6 +162,7 @@ export const updateProfile = async (req, res) => {
         locality: true,
         province: true,
         role: true,
+        lastLogin: true,
         createdAt: true,
         updatedAt: true
       }
