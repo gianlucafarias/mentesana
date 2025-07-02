@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
+import corsConfig from "./src/config/cors.config.js";
+import { generalLimiter, rateLimitHeaders, rateLimitLogger, devBypass } from "./src/config/rateLimits.config.js";
 
 // Importar rutas
 import authRoutes from "./src/routes/auth.routes.js";
@@ -11,14 +13,24 @@ import eventRoutes from "./src/routes/event.routes.js";
 import dailyEntryRoutes from "./src/routes/dailyEntry.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
 import statsRoutes from "./src/routes/stats.routes.js";
+import uploadRoutes from "./src/routes/upload.routes.js";
 
 dotenv.config();
 const app = express();
 export const prisma = new PrismaClient();
 
 // Middlewares
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsConfig));
+app.use(express.json({ limit: '10mb' })); // Aumentar límite para requests JSON
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Servir archivos estáticos (imágenes)
+app.use('/uploads', express.static('uploads'));
+
+app.use(devBypass); 
+app.use(rateLimitHeaders); // Headers
+app.use(rateLimitLogger); // Logging de violaciones
+app.use(generalLimiter); // Rate limit general
 
 // Rutas
 app.use("/api/auth", authRoutes);
@@ -27,6 +39,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/daily-entries", dailyEntryRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Manejo de rutas no encontradas
 app.all('*', (req, res, next) => {

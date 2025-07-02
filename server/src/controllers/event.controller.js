@@ -1,5 +1,6 @@
 import { prisma } from '../../index.js';
 import { notifyNewEvent } from '../services/notification.service.js';
+import { deleteImageFile } from '../config/upload.config.js';
 
 export const createEvent = async (req, res) => {
   try {
@@ -132,6 +133,23 @@ export const deleteEvent = async (req, res) => {
 
     if (existingEvent.authorId !== userId) {
       return res.status(403).json({ message: 'No tienes permiso para eliminar este evento' });
+    }
+
+    // Eliminar imagen asociada si existe
+    if (existingEvent.image) {
+      try {
+        // Extraer nombre del archivo de la URL
+        const imageUrl = existingEvent.image;
+        const filename = imageUrl.split('/').pop();
+        
+        // Solo intentar eliminar si parece ser un archivo local
+        if (filename && !imageUrl.startsWith('http')) {
+          deleteImageFile(filename);
+        }
+      } catch (imageError) {
+        console.warn('Error al eliminar imagen asociada al evento:', imageError);
+        // No fallar la eliminación del evento si hay error con la imagen
+      }
     }
 
     await prisma.event.delete({

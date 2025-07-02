@@ -18,7 +18,8 @@
     "quick-update": "bash quick-update.sh",
     "setup-db": "bash setup-db.sh",
     "backup-db": "bash backup-db.sh",
-    "restore-db": "bash restore-db.sh"
+    "restore-db": "bash restore-db.sh",
+    "test-rate-limits": "bash test-rate-limits.sh"
   },
   "keywords": [],
   "author": "",
@@ -29,8 +30,11 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "express-slow-down": "^2.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
     "openai": "^5.1.1"
   },
   "devDependencies": {
