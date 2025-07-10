@@ -40,7 +40,7 @@ fi
 echo "🔄 Reiniciando aplicación con PM2..."
 pm2 stop mentesana-server 2>/dev/null || true
 pm2 delete mentesana-server 2>/dev/null || true
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Guardar configuración PM2
 pm2 save
