@@ -36,14 +36,10 @@
     "express-slow-down": "^2.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
-<<<<<<< HEAD
     "multer": "^2.0.1",
-    "openai": "^5.1.1"
-=======
     "openai": "^5.1.1",
     "pg": "^8.16.3",
     "uuid": "^11.1.0"
->>>>>>> 822be8369d8b8ac8597075c297f8f76664dc3cec
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
