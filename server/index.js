@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./src/config/database.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 import corsConfig from "./src/config/cors.config.js";
 import { generalLimiter, rateLimitHeaders, rateLimitLogger, devBypass } from "./src/config/rateLimits.config.js";
@@ -18,7 +18,6 @@ import userRoutes from "./src/routes/user.routes.js";
 
 dotenv.config();
 const app = express();
-export const prisma = new PrismaClient();
 
 // Middlewares
 app.use(cors(corsConfig));
@@ -54,7 +53,7 @@ app.all('*', (req, res, next) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor corriendo en el puerto ${PORT} y escuchando en todas las interfaces`);
 });
 

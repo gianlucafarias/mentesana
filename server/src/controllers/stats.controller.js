@@ -1,4 +1,4 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 
 // Obtener estadísticas generales
 export const getGeneralStats = async (req, res) => {

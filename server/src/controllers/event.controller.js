@@ -1,4 +1,4 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 import { notifyNewEvent } from '../services/notification.service.js';
 import { deleteImageFile } from '../config/upload.config.js';
 

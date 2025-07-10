@@ -1,4 +1,4 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 import bcrypt from 'bcrypt';
 
 // Obtener todos los usuarios (solo admin)

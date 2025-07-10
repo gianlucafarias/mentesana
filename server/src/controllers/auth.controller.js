@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 
 export const register = async (req, res) => {
   try {

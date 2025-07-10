@@ -1,4 +1,4 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 import { generateMotivationalMessage } from '../services/openai.service.js';
 
 export const createDailyEntry = async (req, res) => {
