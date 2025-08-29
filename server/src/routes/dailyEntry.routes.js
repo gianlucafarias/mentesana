@@ -1,5 +1,5 @@
 import express from 'express';
-import { createDailyEntry, getDailyEntries, getDailyEntryById, updateDailyEntry, deleteDailyEntry } from '../controllers/dailyEntry.controller.js';
+import { createDailyEntry, getDailyEntries, getDailyEntryById, updateDailyEntry, deleteDailyEntry, canCreateEntryToday, canCreateEntryForDate } from '../controllers/dailyEntry.controller.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { aiLimiter, writeLimiter } from '../config/rateLimits.config.js';
 
@@ -14,6 +14,8 @@ router.put('/:id', aiLimiter, writeLimiter, updateDailyEntry);
 
 // Rutas de lectura - más permisivas
 router.get('/', getDailyEntries);
+router.get('/can-create', canCreateEntryToday);
+router.get('/date/:date', canCreateEntryForDate); // Nueva ruta para fecha específica
 router.get('/:id', getDailyEntryById);
 
 // Eliminación con rate limit de escritura

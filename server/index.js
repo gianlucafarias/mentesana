@@ -15,6 +15,7 @@ import notificationRoutes from "./src/routes/notification.routes.js";
 import statsRoutes from "./src/routes/stats.routes.js";
 import uploadRoutes from "./src/routes/upload.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import insightRoutes from "./src/routes/insight.routes.js";
 
 dotenv.config();
 const app = express();
@@ -41,6 +42,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api", insightRoutes);
 
 // Manejo de rutas no encontradas
 app.all('*', (req, res, next) => {

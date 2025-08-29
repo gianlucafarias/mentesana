@@ -3,11 +3,12 @@ import { generateMotivationalMessage } from '../services/openai.service.js';
 
 export const createDailyEntry = async (req, res) => {
   try {
-    const { mood, notes } = req.body;
+    const { mood, notes, date } = req.body; // Agregar date del body
     const userId = req.user.id;
 
     console.log('Usuario autenticado:', req.user);
     console.log('userId:', userId);
+    console.log('Fecha recibida:', date);
 
     // Verificar que el usuario existe en la base de datos
     const userExists = await prisma.user.findUnique({
@@ -20,24 +21,43 @@ export const createDailyEntry = async (req, res) => {
 
     console.log('Usuario encontrado:', userExists.id);
 
-    // Verificar si ya existe una entrada para hoy
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    // Determinar la fecha objetivo (usar la enviada o la actual)
+    let targetDate;
+    if (date) {
+      // Si se proporciona una fecha específica, usarla
+      const dateParts = date.split('-');
+      if (dateParts.length !== 3) {
+        return res.status(400).json({ message: 'Formato de fecha inválido. Use YYYY-MM-DD' });
+      }
+      const year = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1; // JavaScript months are 0-based
+      const day = parseInt(dateParts[2]);
+      targetDate = new Date(year, month, day);
+    } else {
+      // Si no se proporciona fecha, usar hoy
+      targetDate = new Date();
+    }
+
+    // Verificar si ya existe una entrada para la fecha objetivo
+    const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
 
     const existingEntry = await prisma.dailyEntry.findFirst({
       where: {
         userId: userId,
         date: {
           gte: startOfDay,
-          lt: endOfDay
+          lte: endOfDay
         }
       }
     });
 
     if (existingEntry) {
+      const isToday = targetDate.toDateString() === new Date().toDateString();
       return res.status(409).json({ 
-        message: 'Ya has registrado una entrada para hoy. Podrás crear una nueva entrada mañana.',
+        message: isToday 
+          ? 'Ya has registrado una entrada para hoy. Podrás crear una nueva entrada mañana.'
+          : `Ya has registrado una entrada para ${date || 'esta fecha'}.`,
         existingEntry: existingEntry
       });
     }
@@ -50,7 +70,8 @@ export const createDailyEntry = async (req, res) => {
         mood,
         notes,
         aiMessage,
-        userId
+        userId,
+        date: targetDate // Usar la fecha objetivo
       }
     });
     console.log('Entrada creada:', entry);
@@ -211,5 +232,65 @@ export const canCreateEntryToday = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error al verificar las entradas diarias' });
+  }
+};
+
+// Nuevo endpoint para verificar entrada en fecha específica
+export const canCreateEntryForDate = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { date } = req.params; // formato: YYYY-MM-DD
+
+    // Validar formato de fecha y usar construcción local
+    const dateParts = date.split('-');
+    if (dateParts.length !== 3) {
+      return res.status(400).json({ message: 'Formato de fecha inválido. Use YYYY-MM-DD' });
+    }
+    
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // JavaScript months are 0-based
+    const day = parseInt(dateParts[2]);
+    
+    // Crear fecha local para evitar problemas de zona horaria
+    const targetDate = new Date(year, month, day);
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({ message: 'Formato de fecha inválido' });
+    }
+
+    // Verificar si la fecha es futura (no permitir)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (targetDate > today) {
+      return res.status(400).json({ 
+        message: 'No puedes registrar entradas para fechas futuras',
+        canCreate: false,
+        reason: 'future_date'
+      });
+    }
+
+    // Verificar si ya existe una entrada para esa fecha usando fecha local
+    const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+    const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+
+    const existingEntry = await prisma.dailyEntry.findFirst({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lt: endOfDay
+        }
+      }
+    });
+
+    res.json({
+      canCreate: !existingEntry,
+      hasEntry: !!existingEntry,
+      existingEntry: existingEntry || null,
+      targetDate: date,
+      isToday: targetDate.getTime() === today.getTime()
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al verificar la entrada para la fecha especificada' });
   }
 }; 

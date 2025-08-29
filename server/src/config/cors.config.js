@@ -7,11 +7,13 @@ const corsConfig = {
       return callback(null, true);
     }
     
-    // En producción: lista específica de dominios permitidos
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'https://mentesana.app', 
-    ].filter(Boolean);
+      // En producción: lista específica de dominios permitidos
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'https://mentesana.app',
+    'http://149.50.150.30:5173', // IP externa del VPS
+    'http://localhost:5173' // Para testing local
+  ].filter(Boolean);
 
     if (!origin) return callback(null, true);
     
