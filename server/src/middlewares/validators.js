@@ -25,6 +25,70 @@ export const registerValidator = [
     .withMessage('El nombre es requerido')
     .isLength({ min: 2 })
     .withMessage('El nombre debe tener al menos 2 caracteres'),
+  body('birthDate')
+    .optional()
+    .isISO8601()
+    .withMessage('La fecha de nacimiento debe estar en formato ISO8601'),
+  body('locality')
+    .optional()
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('La localidad debe tener al menos 2 caracteres'),
+  body('province')
+    .optional()
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('La provincia debe tener al menos 2 caracteres'),
+  body('doesSport')
+    .optional()
+    .isBoolean()
+    .withMessage('doesSport debe ser booleano'),
+  body('sportFrequency')
+    .optional()
+    .isIn(['never', 'occasionally', 'weekly', 'daily'])
+    .withMessage('Frecuencia de deporte invalida'),
+  body('therapyHistory')
+    .optional()
+    .isIn(['never', 'past', 'current'])
+    .withMessage('Historia de terapia invalida'),
+  body('hasSiblings')
+    .optional()
+    .isBoolean()
+    .withMessage('hasSiblings debe ser booleano'),
+  body('siblingsCount')
+    .optional()
+    .isInt({ min: 0, max: 20 })
+    .withMessage('siblingsCount debe ser un entero entre 0 y 20'),
+  body('livesWith')
+    .optional()
+    .isIn(['both_parents', 'one_parent', 'relatives', 'guardians', 'residence', 'other'])
+    .withMessage('livesWith invalido'),
+  body('hobbies')
+    .optional()
+    .isArray({ max: 10 })
+    .withMessage('hobbies debe ser un array de hasta 10 elementos'),
+  body('hobbies.*')
+    .optional()
+    .isString()
+    .isLength({ min: 2, max: 40 })
+    .withMessage('Cada hobby debe tener entre 2 y 40 caracteres'),
+  body('screenTimeHours')
+    .optional()
+    .isInt({ min: 0, max: 24 })
+    .withMessage('screenTimeHours debe estar entre 0 y 24'),
+  body('sleepHours')
+    .optional()
+    .isInt({ min: 0, max: 24 })
+    .withMessage('sleepHours debe estar entre 0 y 24'),
+  body('extracurricularActivities')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('extracurricularActivities no puede superar 200 caracteres'),
+  body('researchConsent')
+    .optional()
+    .isBoolean()
+    .withMessage('researchConsent debe ser booleano'),
   validate
 ];
 
@@ -104,6 +168,29 @@ export const createDailyEntryValidator = [
     .trim()
     .isLength({ max: 500 })
     .withMessage('Las notas no pueden exceder los 500 caracteres'),
+  body('date')
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('La fecha debe estar en formato YYYY-MM-DD'),
+  validate
+];
+
+export const updateDailyEntryValidator = [
+  body('mood')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('El estado de ánimo debe ser un número entre 1 y 5'),
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Las notas no pueden exceder los 500 caracteres'),
+  validate
+];
+
+export const dateParamValidator = [
+  param('date')
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('La fecha debe estar en formato YYYY-MM-DD'),
   validate
 ];
 

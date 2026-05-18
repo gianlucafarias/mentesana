@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { prisma } from "./src/config/database.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 import corsConfig from "./src/config/cors.config.js";
 import { generalLimiter, rateLimitHeaders, rateLimitLogger, devBypass } from "./src/config/rateLimits.config.js";
@@ -16,6 +15,9 @@ import statsRoutes from "./src/routes/stats.routes.js";
 import uploadRoutes from "./src/routes/upload.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import insightRoutes from "./src/routes/insight.routes.js";
+import achievementRoutes from "./src/routes/achievement.routes.js";
+import weeklySummaryRoutes from "./src/routes/weeklySummary.routes.js";
+import { prisma } from "./src/config/database.js";
 
 dotenv.config();
 const app = express();
@@ -43,6 +45,8 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", insightRoutes);
+app.use("/api", achievementRoutes);
+app.use("/api/weekly-summary", weeklySummaryRoutes);
 
 // Manejo de rutas no encontradas
 app.all('*', (req, res, next) => {
@@ -54,8 +58,29 @@ app.all('*', (req, res, next) => {
 // Manejo de errores global
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en el puerto ${PORT} y escuchando en todas las interfaces`);
-});
+const ensureDatabaseCompatibility = async () => {
+  const columns = await prisma.$queryRaw`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_name = 'DailyEntry'
+  `;
+  const columnNames = new Set(columns.map((row) => row.column_name));
+  if (!columnNames.has('aiMessageData')) {
+    throw new Error(
+      'Schema incompatible: falta columna DailyEntry.aiMessageData. Ejecuta "npx prisma migrate deploy" y "npx prisma generate".'
+    );
+  }
+};
 
+const startServer = async () => {
+  const PORT = process.env.PORT || 3000;
+  await ensureDatabaseCompatibility();
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor corriendo en el puerto ${PORT} y escuchando en todas las interfaces`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error('No se pudo iniciar el servidor por incompatibilidad de esquema:', error.message);
+  process.exit(1);
+});

@@ -81,7 +81,7 @@ class InsightService {
             content: prompt
           }
         ],
-        temperature: 0.3, // Más determinístico para análisis específico
+        temperature: 0.3, 
         max_tokens: 600,
         response_format: { type: "json_object" }
       });
@@ -111,7 +111,7 @@ class InsightService {
     === DATOS DEL USUARIO ===
     Entradas totales: ${stats.totalEntries || 0}
     Período reciente (últimas ${stats.recentStats?.count || 0} entradas):
-    - Promedio estado de ánimo: ${(stats.recentStats?.avgMood || 0).toFixed(1)}/7
+    - Promedio estado de ánimo: ${(stats.recentStats?.avgMood || 0).toFixed(1)}/5
     - Distribución de estados de ánimo: ${this.getMoodDistribution(stats.recentStats)}
     - Entradas con reflexiones escritas: ${stats.entriesWithNotes || 0}/${stats.recentStats?.count || 0} (${(stats.notesPercentage || 0).toFixed(0)}%)`;
 
@@ -119,7 +119,7 @@ class InsightService {
     if (stats.recentStats?.dayOfWeekStats && Object.keys(stats.recentStats.dayOfWeekStats).length > 1) {
       const dayStats = Object.keys(stats.recentStats.dayOfWeekStats).map(day => {
         const dayStat = stats.recentStats.dayOfWeekStats[day];
-        return `${dayNames[day]}: ${(dayStat?.averageMood || 0).toFixed(1)}/7`;
+        return `${dayNames[day]}: ${(dayStat?.averageMood || 0).toFixed(1)}/5`;
       }).join(', ');
       prompt += `\n- Patrones por día: ${dayStats}`;
     }
@@ -176,8 +176,8 @@ class InsightService {
     
     const distribution = [];
     const moodLabels = {
-      1: 'Muy triste', 2: 'Triste', 3: 'Regular', 
-      4: 'Bien', 5: 'Muy bien', 6: 'Fantástico', 7: 'Increíble'
+      1: 'Muy triste', 2: 'Triste', 3: 'Regular',
+      4: 'Bien', 5: 'Muy bien'
     };
     
     Object.keys(recentStats.moodDistribution).forEach(mood => {
@@ -213,8 +213,8 @@ class InsightService {
       if (avgMood >= 5) {
         moodInsight = {
           type: 'trend',
-          title: `Promedio alto: ${avgMood.toFixed(1)}/7`,
-          description: `Tu promedio de ${avgMood.toFixed(1)}/7 muestra bienestar consistente. Para mantenerlo, identifica qué actividades específicas contribuyen a estos buenos días.`,
+          title: `Promedio alto: ${avgMood.toFixed(1)}/5`,
+          description: `Tu promedio de ${avgMood.toFixed(1)}/5 muestra bienestar consistente. Para mantenerlo, identifica qué actividades específicas contribuyen a estos buenos días.`,
           confidence: 0.85,
           actionable: true,
           actionText: 'Identifica tus patrones positivos',
@@ -223,8 +223,8 @@ class InsightService {
       } else if (avgMood >= 3.5) {
         moodInsight = {
           type: 'recommendation',
-          title: `Promedio moderado: ${avgMood.toFixed(1)}/7`,
-          description: `Con ${avgMood.toFixed(1)}/7, tienes base sólida para mejorar. Enfócate en aumentar actividades que eleven tu estado de ánimo por encima de 4/7.`,
+          title: `Promedio moderado: ${avgMood.toFixed(1)}/5`,
+          description: `Con ${avgMood.toFixed(1)}/5, tienes base sólida para mejorar. Enfócate en aumentar actividades que eleven tu estado de ánimo por encima de 4/5.`,
           confidence: 0.8,
           actionable: true,
           actionText: 'Planifica mejoras específicas',
@@ -233,8 +233,8 @@ class InsightService {
       } else {
         moodInsight = {
           type: 'pattern',
-          title: `Promedio bajo: ${avgMood.toFixed(1)}/7`,
-          description: `Tu promedio de ${avgMood.toFixed(1)}/7 indica necesidad de cambios. Considera rutinas matutinas, ejercicio ligero o actividades que disfrutabas antes.`,
+          title: `Promedio bajo: ${avgMood.toFixed(1)}/5`,
+          description: `Tu promedio de ${avgMood.toFixed(1)}/5 indica necesidad de cambios. Considera rutinas matutinas, ejercicio ligero o actividades que disfrutabas antes.`,
           confidence: 0.8,
           actionable: true,
           actionText: 'Implementa rutinas positivas',

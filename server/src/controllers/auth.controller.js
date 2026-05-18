@@ -4,7 +4,26 @@ import { prisma } from '../config/database.js';
 
 export const register = async (req, res) => {
   try {
-    const { email, password, name, birthDate, locality, province, role } = req.body;
+    const {
+      email,
+      password,
+      name,
+      birthDate,
+      locality,
+      province,
+      role,
+      doesSport,
+      sportFrequency,
+      therapyHistory,
+      hasSiblings,
+      siblingsCount,
+      livesWith,
+      hobbies,
+      screenTimeHours,
+      sleepHours,
+      extracurricularActivities,
+      researchConsent
+    } = req.body;
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -29,6 +48,17 @@ export const register = async (req, res) => {
     if (birthDate) userData.birthDate = new Date(birthDate);
     if (locality) userData.locality = locality;
     if (province) userData.province = province;
+    if (typeof doesSport === 'boolean') userData.doesSport = doesSport;
+    if (sportFrequency) userData.sportFrequency = sportFrequency;
+    if (therapyHistory) userData.therapyHistory = therapyHistory;
+    if (typeof hasSiblings === 'boolean') userData.hasSiblings = hasSiblings;
+    if (Number.isInteger(siblingsCount)) userData.siblingsCount = siblingsCount;
+    if (livesWith) userData.livesWith = livesWith;
+    if (Array.isArray(hobbies)) userData.hobbies = hobbies;
+    if (Number.isInteger(screenTimeHours)) userData.screenTimeHours = screenTimeHours;
+    if (Number.isInteger(sleepHours)) userData.sleepHours = sleepHours;
+    if (extracurricularActivities) userData.extracurricularActivities = extracurricularActivities;
+    if (typeof researchConsent === 'boolean') userData.researchConsent = researchConsent;
     if (role && ['USER', 'EDITOR', 'ADMIN'].includes(role)) {
       userData.role = role;
     }
@@ -43,6 +73,17 @@ export const register = async (req, res) => {
         birthDate: true,
         locality: true,
         province: true,
+        doesSport: true,
+        sportFrequency: true,
+        therapyHistory: true,
+        hasSiblings: true,
+        siblingsCount: true,
+        livesWith: true,
+        hobbies: true,
+        screenTimeHours: true,
+        sleepHours: true,
+        extracurricularActivities: true,
+        researchConsent: true,
         role: true,
         createdAt: true
       }
@@ -73,6 +114,17 @@ export const login = async (req, res) => {
         birthDate: true,
         locality: true,
         province: true,
+        doesSport: true,
+        sportFrequency: true,
+        therapyHistory: true,
+        hasSiblings: true,
+        siblingsCount: true,
+        livesWith: true,
+        hobbies: true,
+        screenTimeHours: true,
+        sleepHours: true,
+        extracurricularActivities: true,
+        researchConsent: true,
         role: true,
         isActive: true,
         createdAt: true
@@ -126,6 +178,17 @@ export const getProfile = async (req, res) => {
         birthDate: true,
         locality: true,
         province: true,
+        doesSport: true,
+        sportFrequency: true,
+        therapyHistory: true,
+        hasSiblings: true,
+        siblingsCount: true,
+        livesWith: true,
+        hobbies: true,
+        screenTimeHours: true,
+        sleepHours: true,
+        extracurricularActivities: true,
+        researchConsent: true,
         role: true,
         lastLogin: true,
         createdAt: true,
@@ -142,7 +205,23 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, birthDate, locality, province } = req.body;
+    const {
+      name,
+      birthDate,
+      locality,
+      province,
+      doesSport,
+      sportFrequency,
+      therapyHistory,
+      hasSiblings,
+      siblingsCount,
+      livesWith,
+      hobbies,
+      screenTimeHours,
+      sleepHours,
+      extracurricularActivities,
+      researchConsent
+    } = req.body;
     
     // Preparar datos para actualizar
     const updateData = {};
@@ -150,6 +229,17 @@ export const updateProfile = async (req, res) => {
     if (birthDate) updateData.birthDate = new Date(birthDate);
     if (locality) updateData.locality = locality;
     if (province) updateData.province = province;
+    if (typeof doesSport === 'boolean') updateData.doesSport = doesSport;
+    if (sportFrequency) updateData.sportFrequency = sportFrequency;
+    if (therapyHistory) updateData.therapyHistory = therapyHistory;
+    if (typeof hasSiblings === 'boolean') updateData.hasSiblings = hasSiblings;
+    if (Number.isInteger(siblingsCount)) updateData.siblingsCount = siblingsCount;
+    if (livesWith) updateData.livesWith = livesWith;
+    if (Array.isArray(hobbies)) updateData.hobbies = hobbies;
+    if (Number.isInteger(screenTimeHours)) updateData.screenTimeHours = screenTimeHours;
+    if (Number.isInteger(sleepHours)) updateData.sleepHours = sleepHours;
+    if (extracurricularActivities) updateData.extracurricularActivities = extracurricularActivities;
+    if (typeof researchConsent === 'boolean') updateData.researchConsent = researchConsent;
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
@@ -161,6 +251,17 @@ export const updateProfile = async (req, res) => {
         birthDate: true,
         locality: true,
         province: true,
+        doesSport: true,
+        sportFrequency: true,
+        therapyHistory: true,
+        hasSiblings: true,
+        siblingsCount: true,
+        livesWith: true,
+        hobbies: true,
+        screenTimeHours: true,
+        sleepHours: true,
+        extracurricularActivities: true,
+        researchConsent: true,
         role: true,
         lastLogin: true,
         createdAt: true,
