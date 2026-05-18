@@ -7,11 +7,15 @@ import {
   getUserStatsByRole 
 } from '../controllers/stats.controller.js';
 import { authenticateToken, requireAdmin } from '../middlewares/auth.middleware.js';
+import { adminLimiter } from '../config/rateLimits.config.js';
 
 const router = express.Router();
 
 // Todas las rutas de estadísticas requieren autenticación y privilegios de admin
 router.use(authenticateToken, requireAdmin);
+
+// Rate limiting para todas las estadísticas (operaciones costosas)
+router.use(adminLimiter);
 
 // Estadísticas generales
 router.get('/general', getGeneralStats);

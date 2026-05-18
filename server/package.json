@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node seed.js",
+    "seed:reset": "node seed.js --reset",
+    "test": "jest --runInBand",
     "db:migrate": "npx prisma migrate deploy",
     "db:generate": "npx prisma generate",
     "db:setup": "npx prisma migrate deploy && npx prisma generate",
@@ -18,7 +20,8 @@
     "quick-update": "bash quick-update.sh",
     "setup-db": "bash setup-db.sh",
     "backup-db": "bash backup-db.sh",
-    "restore-db": "bash restore-db.sh"
+    "restore-db": "bash restore-db.sh",
+    "test-rate-limits": "bash test-rate-limits.sh"
   },
   "keywords": [],
   "author": "",
@@ -29,12 +32,25 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "express-slow-down": "^2.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
-    "openai": "^5.1.1"
+    "multer": "^2.0.1",
+    "openai": "^5.1.1",
+    "pg": "^8.16.3",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "@faker-js/faker": "^10.0.0",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.1.2",
+    "cross-env": "^10.0.0",
+    "jest": "^30.1.3",
     "nodemon": "^3.1.10",
-    "prisma": "^6.2.1"
+    "prisma": "^6.2.1",
+    "supertest": "^7.1.4"
   }
 }

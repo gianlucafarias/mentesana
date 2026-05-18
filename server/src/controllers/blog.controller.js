@@ -1,5 +1,6 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 import { notifyNewPost } from '../services/notification.service.js';
+import { deleteImageFile } from '../config/upload.config.js';
 
 export const createPost = async (req, res) => {
   try {
@@ -129,6 +130,23 @@ export const deletePost = async (req, res) => {
 
     if (existingPost.authorId !== userId) {
       return res.status(403).json({ message: 'No tienes permiso para eliminar este post' });
+    }
+
+    // Eliminar imagen asociada si existe
+    if (existingPost.image) {
+      try {
+        // Extraer nombre del archivo de la URL
+        const imageUrl = existingPost.image;
+        const filename = imageUrl.split('/').pop();
+        
+        // Solo intentar eliminar si parece ser un archivo local
+        if (filename && !imageUrl.startsWith('http')) {
+          deleteImageFile(filename);
+        }
+      } catch (imageError) {
+        console.warn('Error al eliminar imagen asociada:', imageError);
+        // No fallar la eliminación del post si hay error con la imagen
+      }
     }
 
     await prisma.post.delete({

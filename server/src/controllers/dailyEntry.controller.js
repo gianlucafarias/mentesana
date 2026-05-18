@@ -1,15 +1,34 @@
-import { prisma } from '../../index.js';
+import { prisma } from '../config/database.js';
 import { generateMotivationalMessage } from '../services/openai.service.js';
+import achievementService from '../services/achievement.service.js';
+
+const parseLocalDate = (dateString) => {
+  const dateParts = dateString.split('-');
+  if (dateParts.length !== 3) {
+    return null;
+  }
+  const year = parseInt(dateParts[0], 10);
+  const month = parseInt(dateParts[1], 10) - 1;
+  const day = parseInt(dateParts[2], 10);
+  const result = new Date(year, month, day);
+  if (Number.isNaN(result.getTime())) {
+    return null;
+  }
+  return result;
+};
+
+const toEntryDate = (date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const createDailyEntry = async (req, res) => {
   try {
-    const { mood, notes } = req.body;
+    const { mood, notes, date } = req.body;
     const userId = req.user.id;
 
-    console.log('Usuario autenticado:', req.user);
-    console.log('userId:', userId);
-
-    // Verificar que el usuario existe en la base de datos
     const userExists = await prisma.user.findUnique({
       where: { id: userId }
     });
@@ -18,45 +37,86 @@ export const createDailyEntry = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado en la base de datos' });
     }
 
-    console.log('Usuario encontrado:', userExists.id);
+    let targetDate;
+    if (date) {
+      targetDate = parseLocalDate(date);
+      if (!targetDate) {
+        return res.status(400).json({ message: 'Formato de fecha inválido. Use YYYY-MM-DD' });
+      }
+    } else {
+      targetDate = new Date();
+    }
 
-    // Verificar si ya existe una entrada para hoy
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    today.setHours(0, 0, 0, 0);
+    const targetDay = new Date(targetDate);
+    targetDay.setHours(0, 0, 0, 0);
+    if (targetDay > today) {
+      return res.status(400).json({ message: 'No puedes registrar entradas para fechas futuras' });
+    }
 
+    const entryDate = toEntryDate(targetDate);
     const existingEntry = await prisma.dailyEntry.findFirst({
       where: {
-        userId: userId,
-        date: {
-          gte: startOfDay,
-          lt: endOfDay
-        }
+        userId,
+        entryDate
       }
     });
 
     if (existingEntry) {
-      return res.status(409).json({ 
-        message: 'Ya has registrado una entrada para hoy. Podrás crear una nueva entrada mañana.',
-        existingEntry: existingEntry
+      const isToday = entryDate === toEntryDate(new Date());
+      return res.status(409).json({
+        message: isToday
+          ? 'Ya has registrado una entrada para hoy. Podrás crear una nueva entrada mañana.'
+          : `Ya has registrado una entrada para ${entryDate}.`,
+        existingEntry
       });
     }
 
-    // Generar mensaje motivacional con IA
-    const aiMessage = await generateMotivationalMessage(mood, notes);
+    const aiResult = await generateMotivationalMessage(mood, notes);
 
-    const entry = await prisma.dailyEntry.create({
-      data: {
-        mood,
-        notes,
-        aiMessage,
-        userId
+    const createData = {
+      mood,
+      notes,
+      aiMessage: aiResult.message,
+      aiMessageData: aiResult.uiMessage || null,
+      riskLevel: aiResult.riskLevel,
+      safetyFlags: aiResult.safetyFlags,
+      aiModel: aiResult.model,
+      aiPromptVersion: aiResult.promptVersion,
+      userId,
+      date: targetDate,
+      entryDate
+    };
+
+    let entry;
+    try {
+      entry = await prisma.dailyEntry.create({
+        data: createData
+      });
+    } catch (dbError) {
+      if (dbError.code === 'P2002') {
+        return res.status(409).json({
+          message: `Ya has registrado una entrada para ${entryDate}.`
+        });
       }
-    });
-    console.log('Entrada creada:', entry);
-    res.status(201).json(entry);
+      throw dbError;
+    }
+
+    const achievementSync = await achievementService.syncUserAchievements(userId);
+    res.status(201).json({ ...entry, unlockedAchievements: achievementSync.unlockedNow });
   } catch (error) {
-    console.error('Error completo:', error);
+    console.error('Error al crear entrada diaria:', error);
+    if (error?.name === 'AIResponseValidationError') {
+      return res.status(502).json({
+        message: 'No se pudo generar una respuesta válida de IA. Intenta nuevamente en unos segundos.'
+      });
+    }
+    if (error?.name === 'PrismaClientValidationError' && String(error?.message || '').includes('aiMessageData')) {
+      return res.status(500).json({
+        message: 'El servidor no está sincronizado con la base de datos. Ejecuta migraciones y reinicia.'
+      });
+    }
     res.status(500).json({ message: 'Error al crear la entrada diaria' });
   }
 };
@@ -66,7 +126,7 @@ export const getDailyEntries = async (req, res) => {
     const userId = req.user.id;
     const { startDate, endDate } = req.query;
 
-    let whereClause = { userId };
+    const whereClause = { userId };
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -77,7 +137,7 @@ export const getDailyEntries = async (req, res) => {
 
       whereClause.date = {
         gte: start,
-        lte: end,
+        lte: end
       };
     }
 
@@ -137,21 +197,38 @@ export const updateDailyEntry = async (req, res) => {
       return res.status(403).json({ message: 'No tienes permiso para editar esta entrada' });
     }
 
-    // Regenerar mensaje motivacional con IA si se actualiza mood o notes
-    const aiMessage = await generateMotivationalMessage(mood, notes);
+    const aiResult = await generateMotivationalMessage(mood, notes);
+
+    const updateData = {
+      mood,
+      notes,
+      aiMessage: aiResult.message,
+      aiMessageData: aiResult.uiMessage || null,
+      riskLevel: aiResult.riskLevel,
+      safetyFlags: aiResult.safetyFlags,
+      aiModel: aiResult.model,
+      aiPromptVersion: aiResult.promptVersion
+    };
 
     const updatedEntry = await prisma.dailyEntry.update({
       where: { id },
-      data: {
-        mood,
-        notes,
-        aiMessage
-      }
+      data: updateData
     });
+    const achievementSync = await achievementService.syncUserAchievements(userId);
 
-    res.json(updatedEntry);
+    res.json({ ...updatedEntry, unlockedAchievements: achievementSync.unlockedNow });
   } catch (error) {
     console.error(error);
+    if (error?.name === 'AIResponseValidationError') {
+      return res.status(502).json({
+        message: 'No se pudo generar una respuesta válida de IA. Intenta nuevamente en unos segundos.'
+      });
+    }
+    if (error?.name === 'PrismaClientValidationError' && String(error?.message || '').includes('aiMessageData')) {
+      return res.status(500).json({
+        message: 'El servidor no está sincronizado con la base de datos. Ejecuta migraciones y reinicia.'
+      });
+    }
     res.status(500).json({ message: 'Error al actualizar la entrada diaria' });
   }
 };
@@ -187,19 +264,12 @@ export const deleteDailyEntry = async (req, res) => {
 export const canCreateEntryToday = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Verificar si ya existe una entrada para hoy
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const entryDate = toEntryDate(new Date());
 
     const existingEntry = await prisma.dailyEntry.findFirst({
       where: {
-        userId: userId,
-        date: {
-          gte: startOfDay,
-          lt: endOfDay
-        }
+        userId,
+        entryDate
       }
     });
 
@@ -212,4 +282,46 @@ export const canCreateEntryToday = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Error al verificar las entradas diarias' });
   }
-}; 
+};
+
+export const canCreateEntryForDate = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { date } = req.params;
+
+    const targetDate = parseLocalDate(date);
+    if (!targetDate) {
+      return res.status(400).json({ message: 'Formato de fecha inválido. Use YYYY-MM-DD' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (targetDate > today) {
+      return res.status(400).json({
+        message: 'No puedes registrar entradas para fechas futuras',
+        canCreate: false,
+        reason: 'future_date'
+      });
+    }
+
+    const entryDate = toEntryDate(targetDate);
+
+    const existingEntry = await prisma.dailyEntry.findFirst({
+      where: {
+        userId,
+        entryDate
+      }
+    });
+
+    res.json({
+      canCreate: !existingEntry,
+      hasEntry: !!existingEntry,
+      existingEntry: existingEntry || null,
+      targetDate: entryDate,
+      isToday: entryDate === toEntryDate(today)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al verificar la entrada para la fecha especificada' });
+  }
+};

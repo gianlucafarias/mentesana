@@ -28,11 +28,19 @@ npm run db:migrate
 echo "📝 Creando directorio de logs..."
 mkdir -p logs
 
+# Configurar entorno de producción
+echo "🔧 Configurando entorno de producción..."
+if [ -f ".env" ]; then
+    # Cambiar NODE_ENV a production
+    sed -i 's/NODE_ENV=development/NODE_ENV=production/' .env
+    echo "✅ NODE_ENV configurado como production"
+fi
+
 # Reiniciar aplicación con PM2
 echo "🔄 Reiniciando aplicación con PM2..."
 pm2 stop mentesana-server 2>/dev/null || true
 pm2 delete mentesana-server 2>/dev/null || true
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Guardar configuración PM2
 pm2 save

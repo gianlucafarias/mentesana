@@ -81,7 +81,10 @@ OPENAI_API_KEY="sk-your-openai-api-key-here"
 
 # Server
 PORT=3000
-NODE_ENV=production
+NODE_ENV=development
+
+# Frontend URL (solo necesario en producción)
+# FRONTEND_URL="https://tu-dominio-frontend.com"
 EOF
 
 print_status "Archivo .env creado/actualizado"
